@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, ChevronDown } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { LogEntry, LogLevel } from '@/types'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
@@ -69,12 +69,12 @@ export default function LogViewer({ logs }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: Math.min(i * 0.003, 0.3) }}
-              className='flex items-start gap-3 px-3 py-1.5 hover:bg-white/3 rounded group'
+              className='flex items-start gap-3 px-3 py-1.5 hover:bg-white/5 rounded'
             >
               <span className='text-muted-foreground/50 w-10 text-right flex-shrink-0 pt-0.5'>{(page * PAGE_SIZE) + i + 1}</span>
               <span className={`flex-shrink-0 px-1.5 py-0.5 rounded border text-[10px] font-bold uppercase w-16 text-center ${LEVEL_COLORS[log.level] || 'text-gray-400'}`}>{log.level}</span>
-              <span className='text-soc-blue/70 flex-shrink-0 hidden sm:block w-36 truncate pt-0.5'>{log.timestamp.substring(0, 19).replace('T', ' ')}</span>
-              <span className='text-soc-green/60 flex-shrink-0 w-24 truncate pt-0.5'>{log.source}</span>
+              <span className='text-blue-400/70 flex-shrink-0 hidden sm:block w-36 truncate pt-0.5'>{log.timestamp.substring(0, 19).replace('T', ' ')}</span>
+              <span className='text-green-400/60 flex-shrink-0 w-24 truncate pt-0.5'>{log.source}</span>
               <span className='text-gray-300 break-all leading-relaxed'>{log.message}</span>
             </motion.div>
           ))}
@@ -84,10 +84,10 @@ export default function LogViewer({ logs }: Props) {
       {totalPages > 1 && (
         <div className='flex items-center justify-center gap-2'>
           <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
-            className='px-3 py-1.5 text-xs bg-soc-panel border border-soc-border rounded hover:border-soc-green/50 disabled:opacity-40'>Prev</button>
+            className='px-3 py-1.5 text-xs bg-soc-panel border border-soc-border rounded hover:border-green-400/50 disabled:opacity-40'>Prev</button>
           <span className='text-xs text-muted-foreground'>Page {page + 1} / {totalPages}</span>
           <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
-            className='px-3 py-1.5 text-xs bg-soc-panel border border-soc-border rounded hover:border-soc-green/50 disabled:opacity-40'>Next</button>
+            className='px-3 py-1.5 text-xs bg-soc-panel border border-soc-border rounded hover:border-green-400/50 disabled:opacity-40'>Next</button>
         </div>
       )}
     </div>

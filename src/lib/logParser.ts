@@ -1,16 +1,43 @@
 import { LogEntry, LogLevel } from '@/types'
 import { generateId } from './utils'
 
-// ---- Pattern library ----
-const PATTERNS = [
-  // Apache/Nginx combined
-  { re: /^(\S+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"[^"]+"\s+(\d{3})/, parse: (m: RegExpMatchArray, raw: string, i: number, f: string): LogEntry => ({ id: generateId(), timestamp: m[2], level: parseInt(m[3]) >= 500 ? 'ERROR' : parseInt(m[3]) >= 400 ? 'WARN' : 'INFO', source: 'Apache/Nginx', message: raw, raw, lineNumber: i, fileName: f }) },
-  // Syslog
-  { re: /^([A-Z][a-z]{2}\s+\d+\s+[\d:]+)\s+(\S+)\s+(\S+):\s+(.+)$/, parse: (m: RegExpMatchArray, raw: string, i: number, f: string): LogEntry => ({ id: generateId(), timestamp: m[1], level: detectLevel(raw), source: m[3], message: m[4], raw, lineNumber: i, fileName: f }) },
-  // Log4j / java
-  { re: /^(\d{4}-\d{2}-\d{2}[T\s][\d:.]+)\s+\[([^\]]+)\]\s+(ERROR|WARN|INFO|DEBUG|TRACE|FATAL)\s+(\S+)\s+-\s+(.+)$/, parse: (m: RegExpMatchArray, raw: string, i: number, f: string): LogEntry => ({ id: generateId(), timestamp: m[1], level: normaliseLevel(m[3]), source: m[4], message: m[5], raw, lineNumber: i, fileName: f }) },
-  // Generic ISO timestamp
-  { re: /^(\d{4}-\d{2}-\d{2}[T\s][\d:.Z+-]+)\s*(ERROR|WARN(?:ING)?|INFO|DEBUG|CRITICAL|FATAL)?[\s:|-]*(.*)$/i, parse: (m: RegExpMatchArray, raw: string, i: number, f: string): LogEntry => ({ id: generateId(), timestamp: m[1], level: normaliseLevel(m[2] || ''), source: extractSource(m[3]), message: m[3], raw, lineNumber: i, fileName: f }) },
+type ParseFn = (m: RegExpMatchArray, raw: string, i: number, f: string) => LogEntry
+
+interface Pattern {
+  re: RegExp
+  parse: ParseFn
+}
+
+const PATTERNS: Pattern[] = [
+  {
+    re: /^(\S+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"[^"]+"\s+(\d{3})/,
+    parse: (m, raw, i, f) => ({
+      id: generateId(), timestamp: m[2],
+      level: (parseInt(m[3]) >= 500 ? 'ERROR' : parseInt(m[3]) >= 400 ? 'WARN' : 'INFO') as LogLevel,
+      source: 'Apache/Nginx', message: raw, raw, lineNumber: i, fileName: f
+    })
+  },
+  {
+    re: /^([A-Z][a-z]{2}\s+\d+\s+[\d:]+)\s+(\S+)\s+(\S+):\s+(.+)$/,
+    parse: (m, raw, i, f) => ({
+      id: generateId(), timestamp: m[1], level: detectLevel(raw),
+      source: m[3], message: m[4], raw, lineNumber: i, fileName: f
+    })
+  },
+  {
+    re: /^(\d{4}-\d{2}-\d{2}[T\s][\d:.]+)\s+\[([^\]]+)\]\s+(ERROR|WARN|INFO|DEBUG|TRACE|FATAL)\s+(\S+)\s+-\s+(.+)$/,
+    parse: (m, raw, i, f) => ({
+      id: generateId(), timestamp: m[1], level: normaliseLevel(m[3]),
+      source: m[4], message: m[5], raw, lineNumber: i, fileName: f
+    })
+  },
+  {
+    re: /^(\d{4}-\d{2}-\d{2}[T\s][\d:.Z+-]+)\s*(ERROR|WARN(?:ING)?|INFO|DEBUG|CRITICAL|FATAL)?[\s:|-]*(.*)$/i,
+    parse: (m, raw, i, f) => ({
+      id: generateId(), timestamp: m[1], level: normaliseLevel(m[2] || ''),
+      source: extractSource(m[3]), message: m[3], raw, lineNumber: i, fileName: f
+    })
+  },
 ]
 
 function normaliseLevel(l: string): LogLevel {
@@ -42,7 +69,6 @@ export function parseLogContent(content: string, fileName: string): LogEntry[] {
       const m = raw.match(re)
       if (m) return parse(m, raw, i + 1, fileName)
     }
-    // Fallback
     return {
       id: generateId(),
       timestamp: new Date().toISOString(),

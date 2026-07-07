@@ -16,18 +16,17 @@ export function computeAnalytics(logs: LogEntry[]): AnalyticsData {
     levelCounts[log.level] = (levelCounts[log.level] || 0) + 1
     sourceCounts[log.source] = (sourceCounts[log.source] || 0) + 1
 
-    // Timeline bucket — try to parse timestamp
     try {
       const d = new Date(log.timestamp)
       if (!isNaN(d.getTime())) {
         const bucket = d.toLocaleString('en', { month: 'short', day: '2-digit', hour: '2-digit' })
         const hourKey = d.getHours().toString().padStart(2, '0') + ':00'
-        timeline[bucket] ??= { ERROR: 0, WARN: 0, INFO: 0, CRITICAL: 0 }
+        if (!timeline[bucket]) timeline[bucket] = { ERROR: 0, WARN: 0, INFO: 0, CRITICAL: 0 }
         const lvl = ['ERROR','WARN','INFO','CRITICAL'].includes(log.level) ? log.level : 'INFO'
         timeline[bucket][lvl] = (timeline[bucket][lvl] || 0) + 1
         hourlyCounts[hourKey] = (hourlyCounts[hourKey] || 0) + 1
       }
-    } catch { /* skip */ }
+    } catch (_) { /* skip */ }
 
     if (log.level === 'ERROR' || log.level === 'CRITICAL') {
       const key = log.message.substring(0, 60)
@@ -36,7 +35,7 @@ export function computeAnalytics(logs: LogEntry[]): AnalyticsData {
   }
 
   const timelineData = Object.entries(timeline)
-    .map(([time, counts]) => ({ time, ERROR: counts.ERROR || 0, WARN: counts.WARN || 0, INFO: counts.INFO || 0, CRITICAL: counts.CRITICAL || 0 }))
+    .map(([time, counts]) => ({ time, ERROR: counts['ERROR'] || 0, WARN: counts['WARN'] || 0, INFO: counts['INFO'] || 0, CRITICAL: counts['CRITICAL'] || 0 }))
     .slice(-24)
 
   const sourceDistribution = Object.entries(sourceCounts)
