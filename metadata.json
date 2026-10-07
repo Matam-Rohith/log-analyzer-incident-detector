@@ -1,0 +1,8 @@
+{
+  "name": "LogSentinel — SOC Log Analyzer & Incident Detector",
+  "description": "Enterprise SOC dashboard for real-time log analysis and incident detection",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
